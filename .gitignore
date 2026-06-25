@@ -9,4 +9,4 @@ venv/
 
 # The built search index (large and easy to rebuild)
 faiss_index/
-logs/
+logs/.DS_Store

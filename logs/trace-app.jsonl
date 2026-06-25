@@ -1,0 +1,10 @@
+{"at_ms": 0.0, "event": "run_start"}
+{"at_ms": 1870.7, "agent": "Orchestrator", "ms": 1870.4}
+{"at_ms": 4045.2, "tool": "search_documents", "ms": 559.3}
+{"at_ms": 5067.7, "tool": "search_web", "ms": 1020.5}
+{"at_ms": 17899.9, "agent": "Researcher", "ms": 16028.9}
+{"at_ms": 26986.4, "agent": "Reviewer", "ms": 9086.2}
+{"at_ms": 26986.8, "agent": "ReviewGate", "ms": 0.2}
+{"at_ms": 26986.9, "agent": "ResearchReviewLoop", "ms": 25115.9}
+{"at_ms": 26987.0, "agent": "ToolStackAdvisor", "ms": 26986.7}
+{"at_ms": 26987.0, "event": "run_end", "total_ms": 26987.0}

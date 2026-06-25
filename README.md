@@ -1,13 +1,21 @@
 # AI Tool Stack Advisor — Multi-Agent Intelligence System (Google ADK)
 
-A multi-agent assistant that recommends the right AI/software tools for a team's
-needs. It grounds its answers in a curated knowledge base of product information
-(**RAG**) and checks the **live web** for current pricing and new releases
-(**Tavily**) — built on **Google's Agent Development Kit (ADK)**.
+A multi-agent AI assistant that recommends the right AI/software tools for a team's needs. It grounds every recommendation in a curated knowledge base of product information (**RAG**) and checks the **live web** for current pricing and new releases (**Tavily**) — built on **Google's Agent Development Kit (ADK)** and deployed on **Google Cloud Run**.
 
-A **Manager** agent routes each question, a **Researcher** gathers the evidence,
-and a **Fact-checker** makes sure every claim is backed by a real source before
-the answer is returned.
+A **Manager** agent routes each question, a **Researcher** gathers the evidence, and a **Reviewer** fact-checks every claim against its source before the answer is returned.
+
+### 🔗 Live demo: https://tool-stack-advisor-77870218390.us-central1.run.app
+
+---
+
+## What it does
+
+Ask a question like *"What should my team use for meeting notes, and what does it cost?"* and the system:
+
+1. Decides where the answer lives — the internal knowledge base, the live web, or both.
+2. Pulls tool capabilities from the knowledge base and current pricing/news from the web.
+3. Fact-checks the draft answer against the retrieved evidence, revising it if anything is unsupported.
+4. Returns a cited recommendation you can trust.
 
 ## How it works
 
@@ -15,38 +23,70 @@ the answer is returned.
 your question
       │
       ▼
-  Manager (Orchestrator)  ── decides: our documents, the live web, or both
+  Orchestrator  ── decides the strategy: DOCS, WEB, or BOTH
       │
       ▼
-  Researcher  ── searches the document library (RAG) and/or the web (Tavily),
+  Researcher  ── runs the chosen tool(s): document search (RAG) and/or web search,
       │           then drafts a fully cited answer
       ▼
-  Fact-checker (Reviewer)  ── is every claim backed by a source?
-      │                        if not, send back to the Researcher to redo
+  Reviewer  ── is every claim backed by a real source?
+      │          if not, the answer loops back to the Researcher to revise
       ▼
-  a cited recommendation you can trust
+  a cited recommendation
 ```
+
+**Agent communication patterns (4):** sequential flow, hierarchical delegation (Orchestrator → Researcher), parallel execution (both search tools at once), and a feedback loop (Researcher ↔ Reviewer). Shared session state carries memory across the workflow.
+
+## Tech stack
+
+Python · Google Agent Development Kit (ADK) · Gemini 2.5 Flash · Vertex AI `text-embedding-005` · FAISS · Tavily · Streamlit · Docker · Google Cloud Run
 
 ## Project layout
 
 | Folder / file | What lives here |
 |---|---|
-| `src/agents/` | The three AI agents and how they hand off work |
-| `src/rag/` | Reading documents and building the searchable library |
-| `src/tools/` | The Researcher's tools: library search + web search |
-| `src/observability/` | Logs and metrics so we can see what the system did |
-| `src/config.py` | All shared settings in one place |
-| `src/main.py` | The entry point that runs the whole thing |
-| `knowledge_base/` | The source documents (the AI-tools deck, etc.) |
-| `tests/` | Automated checks |
-| `requirements.txt` | The outside libraries the project needs |
-| `.env.example` | A template for your secret keys (no real keys committed) |
+| `src/agents/` | The three agents (Orchestrator, Researcher, Reviewer) + the loop's exit gate |
+| `src/rag/` | Document loading, chunking, embeddings, and the FAISS vector store |
+| `src/tools/` | The Researcher's tools: knowledge-base search + live web search |
+| `src/observability/` | An ADK plugin that records timings, tool calls, tokens, and a per-run trace |
+| `src/pipeline.py` | The shared engine that runs one question end to end |
+| `src/ask.py` | Command-line entry point |
+| `app.py` | Streamlit chat interface |
+| `knowledge_base/` | Source documents |
+| `requirements.txt` | Python dependencies |
 
-## Status
+## Running it yourself
 
-🚧 Built step by step. Currently: **document loading + chunking complete.**
+**Prerequisites:** Python 3.12, a Google Cloud project with the Vertex AI API enabled, the `gcloud` CLI, and a [Tavily](https://tavily.com) API key.
 
-## Tech
+```bash
+# 1. Install dependencies
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
 
-Google ADK · Gemini 2.5 Flash · Vertex AI `text-embedding-005` · FAISS ·
-Tavily · FastAPI · Streamlit · Cloud Run
+# 2. Authenticate to Google Cloud (for Vertex AI)
+gcloud auth application-default login
+
+# 3. Configure your keys: copy the template and fill it in
+cp .env.example .env
+#    then edit .env with your GOOGLE_CLOUD_PROJECT and TAVILY_API_KEY
+
+# 4. Build the searchable index from the knowledge base
+python -m src.build_index
+
+# 5a. Ask from the command line
+python -m src.ask "what should my team use for meeting notes, and what does it cost?"
+
+# 5b. ...or launch the chat UI
+streamlit run app.py
+```
+
+> The `faiss_index/` folder is generated by `python -m src.build_index` and is intentionally not committed — it's a rebuildable artifact.
+
+## Deployment
+
+Containerized with the included `Dockerfile` and deployed to Google Cloud Run:
+
+```bash
+gcloud run deploy tool-stack-advisor --source . --region us-central1 --allow-unauthenticated --memory 2Gi
+```
