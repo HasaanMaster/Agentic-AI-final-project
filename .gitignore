@@ -1,0 +1,12 @@
+# Python junk
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Your secrets - never save these anywhere public
+.env
+
+# The built search index (large and easy to rebuild)
+faiss_index/
+logs/

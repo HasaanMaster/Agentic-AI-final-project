@@ -1,0 +1,23 @@
+# ============================================================================
+# requirements.txt - the ready-made libraries our project stands on.
+# (You install these once, later, with: pip install -r requirements.txt)
+# ============================================================================
+
+# --- The core: the agent framework + the AI model ---
+google-adk>=2.2        # the framework that runs and connects our agents
+google-genai>=2.8      # talks to Google's Gemini model and embeddings
+
+# --- RAG: turning your documents into a searchable library ---
+pypdf>=5.0             # reads text out of PDF files
+python-pptx>=1.0       # reads text out of PowerPoint files (your deck!)
+tiktoken>=0.8          # chops documents into evenly-sized pieces
+faiss-cpu>=1.9         # the searchable index that finds passages by meaning
+
+# --- The Researcher's web tool ---
+tavily-python>=0.5     # live web search
+
+# --- Running it as a real app later ---
+fastapi>=0.115         # turns the system into a web service
+uvicorn[standard]>=0.30
+streamlit>=1.40        # the simple chat screen
+python-dotenv>=1.0     # loads your secret keys from the .env file
